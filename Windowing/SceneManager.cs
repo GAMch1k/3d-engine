@@ -34,7 +34,7 @@ public class SceneManager
         );
 
         Random random = new Random();
-        for (int i = 0; i < 180; i++)
+        for (int i = 0; i < 400; i++)
         {
             Cube cube = new Cube(
                 $"random-{i}",
@@ -53,8 +53,14 @@ public class SceneManager
                     (float)(random.NextDouble() * (1.5 - 0.5) + 0.5),
                     (float)(random.NextDouble() * (1.5 - 0.5) + 0.5)
                 ),
-                Color.Black
+                Color.LightGray
             );
+            cube.OnUpdate += deltatime =>
+            {
+                cube.Position += new Vector3(0, (float)(random.NextDouble() * (0.6 - -0.6) + -0.6), 0) * new Vector3(deltatime);
+                // cube.Position += new Vector3(0, -9.8f, 0) * new Vector3(deltatime);
+
+            };
             scene.AddObject(cube);
             gameObjects.Add(cube);
         }
@@ -68,7 +74,7 @@ public class SceneManager
 
         cube1.OnUpdate += deltatime =>
         {
-            cube1.Rotation += new Vector3(0, 1 * (float)deltatime, 0);
+            cube1.Rotation += new Vector3(-0.5f, 1, -1) * new Vector3((float)deltatime);
         };
 
         Cube cube2 = new Cube(
@@ -80,7 +86,7 @@ public class SceneManager
         
         cube2.OnUpdate += deltatime =>
         {
-            cube2.Rotation += new Vector3(0, -1 * (float)deltatime, 0);
+            cube2.Rotation += new Vector3(0, -1, 0) * new Vector3((float)deltatime);
         };
 
         scene.AddObject(cube1);

@@ -46,7 +46,7 @@ public class VAOGenerator
         // Normal attribute (location = 2)
         gl.VertexAttribPointer(2, 3, GLEnum.Float, false, 9 * sizeof(float), (void*)(6 * sizeof(float)));
         gl.EnableVertexAttribArray(2);
-        
+
         gl.BindVertexArray(0);
 
         return (vao, vbo, ebo);

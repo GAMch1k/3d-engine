@@ -63,7 +63,8 @@ class Game
         keysPressed.Remove(key);
     }
 
-    private void MouseMove(IMouse mouse, Vector2 position) {
+    private void MouseMove(IMouse mouse, Vector2 position)
+    {
         if (!_mouseCaptured) return;
 
         if (_firstMouse)
@@ -86,15 +87,18 @@ class Game
         camera.MovementSpeed += wheel.Y;
         if (camera.MovementSpeed < 0.1f)
             camera.MovementSpeed = 0.1f;
-        if (camera.MovementSpeed > 15f)
-            camera.MovementSpeed = 15f;
+        if (camera.MovementSpeed > 25f)
+            camera.MovementSpeed = 25f;
     }
 
     private unsafe void OnLoad()
     {
         gl = GL.GetApi(window);
         gl.Enable(GLEnum.DepthTest);
-        
+        gl.Enable(GLEnum.CullFace);
+        gl.CullFace(GLEnum.Back);
+        gl.FrontFace(GLEnum.Ccw);
+
         SceneManager scenemg = new SceneManager();
         scene = scenemg.Load(gl);
         camera = scenemg.camera;
@@ -172,46 +176,53 @@ class Game
             0.1f,
             100f);
 
-        int viewLoc = gl.GetUniformLocation(shaderProgram, "uView");
-        int projLoc = gl.GetUniformLocation(shaderProgram, "uProjection");
-        gl.UniformMatrix4(viewLoc, 1, false, (float*)&view);
-        gl.UniformMatrix4(projLoc, 1, false, (float*)&proj);
-
         // Light uniforms
-        Vector3 lightDir = new Vector3(0.0f, -1.0f, -1.0f);
+        Vector3 lightDir = new Vector3(0.0f, 1.0f, -0.2f);
         lightDir = Vector3.Normalize(lightDir);
         int lightDirLoc = gl.GetUniformLocation(shaderProgram, "uLightDir");
         int lightColorLoc = gl.GetUniformLocation(shaderProgram, "uLightColor");
+
         gl.Uniform3(lightDirLoc, lightDir.X, lightDir.Y, lightDir.Z);
-        gl.Uniform3(lightColorLoc, 1.0f, 1.0f, 1.0f);
+        gl.Uniform3(lightColorLoc, 0.8f, 0.8f, 0.8f);
+
+        int specularLoc = gl.GetUniformLocation(shaderProgram, "uSpecularStrength");
+        int shininessLoc = gl.GetUniformLocation(shaderProgram, "uShininess");
+        gl.Uniform1(specularLoc, 0.7f);  // Medium shine; 0.0=no spec, 1.0=very shiny
+        gl.Uniform1(shininessLoc, 32.0f);  // Sharp highlights; tweak to 16 for softer
+
+        int cameraPosLoc = gl.GetUniformLocation(shaderProgram, "uCameraPos");
+        gl.Uniform3(cameraPosLoc, camera.Position.X, camera.Position.Y, camera.Position.Z);
 
         scene.Render(gl, shaderProgram, view, proj);
     }
 
-    private static uint CreateShaderProgram()
+    private unsafe static uint CreateShaderProgram()
     {
         string vertexCode = @"
-            #version 330 core                                                                         
-            layout(location = 0) in vec3 aPos;                                                        
-            layout(location = 1) in vec3 aColor;                                                      
+            #version 330 core
+            layout(location = 0) in vec3 aPos;
+            layout(location = 1) in vec3 aColor;
             layout(location = 2) in vec3 aNormal;
-                                                                                                    
-            out vec3 vColor;                                                                          
+
+            out vec3 vColor;
             out vec3 vNormal;
             out vec3 vFragPos;
-                                                                                                    
-            uniform mat4 uModel;                                                                      
-            uniform mat4 uView;                                                                       
-            uniform mat4 uProjection;                                                                 
-                                                                                                    
-            void main()                                                                               
-            {                                                                                         
+            out vec3 vViewPos;  // New: For specular (view direction)
+
+            uniform mat4 uModel;
+            uniform mat3 uModel3x3;
+            uniform mat4 uView;
+            uniform mat4 uProjection;
+            uniform vec3 uCameraPos;  // New: Camera position for view dir
+
+            void main()
+            {
                 vColor = aColor;
                 vFragPos = vec3(uModel * vec4(aPos, 1.0));
-                vNormal = mat3(transpose(inverse(uModel))) * aNormal;
-                mat4 mvp = uProjection * uView * uModel;                                              
-                gl_Position = mvp * vec4(aPos, 1.0);                                                  
-            }   
+                vNormal = mat3(transpose(inverse(uModel3x3))) * aNormal;
+                vViewPos = uCameraPos;  // Pass camera pos to frag
+                gl_Position = uProjection * uView * uModel * vec4(aPos, 1.0);
+            }
         ";
 
         string fragmentCode = @"
@@ -219,20 +230,39 @@ class Game
             in vec3 vColor;
             in vec3 vNormal;
             in vec3 vFragPos;
+            in vec3 vViewPos;
 
             out vec4 FragColor;
 
             uniform vec3 uLightDir;
             uniform vec3 uLightColor;
+            uniform float uSpecularStrength;  // New: Controls shine (0.0-1.0)
+            uniform float uShininess;  // New: Exponent for highlight sharpness (2-256)
 
             void main()
             {
                 vec3 norm = normalize(vNormal);
-                vec3 lightDirNorm = normalize(-uLightDir);
+                vec3 lightDirNorm = normalize(uLightDir);  // To light
+                vec3 viewDir = normalize(vViewPos - vFragPos);  // From frag to camera
+                vec3 reflectDir = reflect(-lightDirNorm, norm);  // Reflected light
+
+                // Diffuse
                 float diff = max(dot(norm, lightDirNorm), 0.0);
-                vec3 diffuse = diff * uLightColor;
-                vec3 ambient = 0.2 * uLightColor;
-                vec3 result = (ambient + diffuse) * vColor;
+                vec3 diffuse = 0.8 * diff * uLightColor;
+
+                // Specular (Phong)
+                float spec = pow(max(dot(viewDir, reflectDir), 0.0), uShininess);
+                vec3 specular = uSpecularStrength * spec * uLightColor;
+
+                // Ambient
+                vec3 ambient = 0.4 * uLightColor;
+
+                // Combine
+                vec3 result = (ambient + diffuse + specular) * vColor;
+
+                // Gamma correction (2.2 for sRGB)
+                result = pow(result, vec3(1.0 / 2.2));
+
                 FragColor = vec4(result, 1.0);
             }
         ";
@@ -252,6 +282,16 @@ class Game
         gl.AttachShader(program, vertex);
         gl.AttachShader(program, fragment);
         gl.LinkProgram(program);
+
+        int linkSuccess;
+        gl.GetProgram(program, GLEnum.LinkStatus, &linkSuccess);
+        if (linkSuccess == 0)
+        {
+            string log = gl.GetProgramInfoLog(program);
+            Console.WriteLine($"SHADER LINK ERROR: {log}");
+            return 0;
+        }
+        Console.WriteLine("Shader linked successfully.");
 
         gl.DeleteShader(vertex);
         gl.DeleteShader(fragment);

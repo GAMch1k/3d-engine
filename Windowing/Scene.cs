@@ -50,8 +50,6 @@ public class Scene
 
     public unsafe void Render(GL gl, uint shaderProgram, Matrix4x4 view, Matrix4x4 projection)
     {
-        gl.UseProgram(shaderProgram);
-
         int viewLoc = gl.GetUniformLocation(shaderProgram, "uView");
         int projLoc = gl.GetUniformLocation(shaderProgram, "uProjection");
         gl.UniformMatrix4(viewLoc, 1, false, (float*)&view);
@@ -63,6 +61,18 @@ public class Scene
         {
             var model = obj.Value.GetModelMatrix();
             gl.UniformMatrix4(modelLoc, 1, false, (float*)&model);
+
+            float[] model3x3 = new float[9] {                                                             
+                model.M11, model.M12, model.M13,                                                          
+                model.M21, model.M22, model.M23,                                                          
+                model.M31, model.M32, model.M33                                                           
+            };                                                                                            
+                                                                                                        
+            int model3x3Loc = gl.GetUniformLocation(shaderProgram, "uModel3x3");                          
+            fixed (float* ptr = model3x3)                                                                 
+            {                                                                                             
+                gl.UniformMatrix3(model3x3Loc, 1, false, ptr);                                            
+            } 
 
             gl.BindVertexArray(_objectVAOs[obj.Value]);
             gl.DrawElements(GLEnum.Triangles, obj.Value.indexCount, GLEnum.UnsignedInt, null);
