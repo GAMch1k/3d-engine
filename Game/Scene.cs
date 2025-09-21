@@ -111,7 +111,6 @@ public class Scene
 
     public void LoadProceduralGenerationScene()
     {
-        sceneRenderer.RegisterObjectType<Cube>((uint)ObjectIndexes.Cube);
 
         camera = new Camera(
             "Main Camera",
@@ -119,6 +118,28 @@ public class Scene
             Vector3.Zero,
             Vector3.One
         );
+
+        Cube cube = new Cube(
+            "cube blue",
+            new Vector3(0, 0, 0),
+            Vector3.Zero,
+            new Vector3(0.5f, 0.5f, 0.5f),
+            Color.Blue);
+
+        Terrain terrain = new Terrain(
+            "Terrain",
+            new Vector3(0, -2, 0),
+            Vector3.Zero,
+            Vector3.One,
+            new Vector2(50, 50),
+            1f
+        );
+
+        sceneRenderer.RegisterObjectType<Terrain>(terrain.indexCount);
+        sceneRenderer.AddObject(terrain);
+        sceneRenderer.RegisterObjectType<Cube>((uint)ObjectIndexes.Cube);
+        sceneRenderer.AddObject(cube);
+
     }
 
     public void Clear()
