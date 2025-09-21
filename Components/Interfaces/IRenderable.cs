@@ -5,9 +5,9 @@ using Silk.NET.Maths;
 
 public interface IRenderable
 {
-    Vector3 position { get; set; }
-    Vector3 rotation { get; set; }
-    Vector3 scale { get; set; }
+    Vector3 Position { get; set; }
+    Vector3 Rotation { get; set; }
+    Vector3 Scale { get; set; }
     uint indexCount { get; set; }
 
     float[] GetVertices();

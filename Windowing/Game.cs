@@ -21,10 +21,12 @@ class Game
 
     private static uint shaderProgram;
 
-    private Vector3D<float> camera_position;
-    private float cameraSpeed = 1f;
-
+    Camera camera;
+    private Vector2 _lastMousePosition;
+    private bool _firstMouse = true;
+    private bool _mouseCaptured = false;
     private List<Key> keysPressed = new List<Key> { };
+    IInputContext _windowInput;
 
     private Scene scene;
 
@@ -38,8 +40,6 @@ class Game
         window.Load += OnLoad;
         window.Update += OnUpdate;
         window.Render += OnRender;
-
-        camera_position = new Vector3D<float>(0f, 0f, -5f);
     }
 
     public void Run()
@@ -63,7 +63,25 @@ class Game
         keysPressed.Remove(key);
     }
 
-    private void AddObjectToScene()
+    private void MouseMove(IMouse mouse, Vector2 position) {
+        if (!_mouseCaptured) return;
+        
+        if (_firstMouse)
+        {
+            _lastMousePosition = position;
+            _firstMouse = false;
+            return;
+        }
+        
+        float xOffset = position.X - _lastMousePosition.X;
+        float yOffset = _lastMousePosition.Y - position.Y;
+        
+        _lastMousePosition = position;
+        
+        camera.ProcessMouseMovement(xOffset, yOffset);
+    }
+
+    private void AddObjectsToScene()
     {
         scene.RegisterObjectType<Cube>((uint)ObjectIndexes.Cube);
 
@@ -86,21 +104,28 @@ class Game
     private unsafe void OnLoad()
     {
         gl = GL.GetApi(window);
-
-        IInputContext input = window.CreateInput();
-        for (int i = 0; i < input.Keyboards.Count; i++)
-            input.Keyboards[i].KeyDown += KeyDown;
-        for (int i = 0; i < input.Keyboards.Count; i++)
-            input.Keyboards[i].KeyUp += KeyUp;
-
         gl.Enable(GLEnum.DepthTest);
 
+        camera = new Camera(
+            new Vector3(0, 0, 5),
+            Vector3.Zero,
+            Vector3.One
+        );
         scene = new Scene(gl);
 
-        AddObjectToScene();
+        AddObjectsToScene();
 
         shaderProgram = CreateShaderProgram();
 
+        
+
+        _windowInput = window.CreateInput();
+        for (int i = 0; i < _windowInput.Mice.Count; i++)
+            _windowInput.Mice[i].MouseMove += MouseMove;
+        for (int i = 0; i < _windowInput.Keyboards.Count; i++)
+                _windowInput.Keyboards[i].KeyDown += KeyDown;
+        for (int i = 0; i < _windowInput.Keyboards.Count; i++)
+            _windowInput.Keyboards[i].KeyUp += KeyUp;
     }
 
     private void OnUpdate(double delta)
@@ -112,22 +137,30 @@ class Game
                 switch (key)
                 {
                     case Key.W:
-                        camera_position.Z += cameraSpeed * (float)delta;
+                        camera.ProcessKeyboard(Camera.CameraMovement.Forward, (float)delta);
                         break;
                     case Key.S:
-                        camera_position.Z -= cameraSpeed * (float)delta;
+                        camera.ProcessKeyboard(Camera.CameraMovement.Backward, (float)delta);
                         break;
                     case Key.A:
-                        camera_position.X += cameraSpeed * (float)delta;
+                        camera.ProcessKeyboard(Camera.CameraMovement.Left, (float)delta);
                         break;
                     case Key.D:
-                        camera_position.X -= cameraSpeed * (float)delta;
+                        camera.ProcessKeyboard(Camera.CameraMovement.Right, (float)delta);
                         break;
                     case Key.ShiftLeft:
-                        camera_position.Y += cameraSpeed * (float)delta;
+                        camera.ProcessKeyboard(Camera.CameraMovement.Down, (float)delta);
                         break;
                     case Key.Space:
-                        camera_position.Y -= cameraSpeed * (float)delta;
+                        camera.ProcessKeyboard(Camera.CameraMovement.Up, (float)delta);
+                        break;
+                    case Key.C:
+                        _mouseCaptured = !_mouseCaptured;
+                        for (int i = 0; i < _windowInput.Mice.Count; i++)
+                        {
+                            _windowInput.Mice[i].Cursor.CursorMode =
+                                _mouseCaptured ? CursorMode.Raw : CursorMode.Normal; 
+                        }
                         break;
                 }
             }
@@ -141,9 +174,9 @@ class Game
 
         gl.UseProgram(shaderProgram);
 
-        var view = Matrix4x4.CreateTranslation(camera_position.X, camera_position.Y, camera_position.Z);
+        var view = camera.GetViewMatrix();
         var proj = Matrix4x4.CreatePerspectiveFieldOfView(
-            (float)Math.PI / 4f,
+            MathHelper.DegreesToRadians(45f),
             window.Size.X / (float)window.Size.Y,
             0.1f,
             100f);

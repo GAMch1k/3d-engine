@@ -4,7 +4,7 @@ using System.Numerics;
 using System.Drawing;
 using Utils;
 
-public class Cube : Object
+public class Cube : RenderObject
 {
     public Cube(
         Vector3 position,
