@@ -17,7 +17,6 @@ public class SceneManager
     {
         scene = new Scene(gl);
 
-        scene.RegisterObjectType<Cube>((uint)ObjectIndexes.Cube);
 
         LoadTestScene();
 
@@ -26,6 +25,8 @@ public class SceneManager
 
     private void LoadTestScene()
     {
+        scene.RegisterObjectType<Cube>((uint)ObjectIndexes.Cube);
+        
         camera = new Camera(
             "Main Camera",
             new Vector3(0, 0, 5),
