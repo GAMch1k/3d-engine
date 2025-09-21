@@ -1,4 +1,5 @@
 using System.Numerics;
+using LibNoise.Primitive;
 
 namespace Prefabs;
 
@@ -7,6 +8,7 @@ public class Terrain : RenderObject
     public Vector2 GridSize;
     public float GridOffset;
     private uint[] _indeces;
+    private SimplexPerlin _perlin = new SimplexPerlin();
 
     public Terrain(
         string name,
@@ -37,14 +39,15 @@ public class Terrain : RenderObject
             // Using Z because Y is just a Vector2 field, not the axis I need
             for (int z = 0; z < height; z++)
             {
+                float yval = _perlin.GetValue(x * 0.1f, z * 0.1f) * (1f - -0.5f) + -0.5f;
                 // position
                 vertices.Add(-(GridSize.X / 2) + GridOffset * x);
-                vertices.Add((float)(random.NextDouble() * (0.7 - 0.2) + 0.2));
+                vertices.Add(yval);
                 vertices.Add((GridSize.Y / 2) - GridOffset * z);
 
                 // color
                 vertices.Add(0.1f);
-                vertices.Add(0.1f);
+                vertices.Add(0.2f);
                 vertices.Add(0.1f);
 
                 // normal
