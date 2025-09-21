@@ -4,7 +4,7 @@ using Prefabs;
 using Silk.NET.OpenGL;
 using Utils;
 
-namespace Windowing;
+namespace Game;
 
 
 public class SceneManager

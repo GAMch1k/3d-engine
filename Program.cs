@@ -1,6 +1,6 @@
 ﻿
-using Windowing;
+using Game;
 
-Game game = new Game(1280, 720);
+Game.Game game = new Game.Game(1280, 720);
 
 game.Run();

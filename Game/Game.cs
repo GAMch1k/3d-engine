@@ -12,7 +12,7 @@ using Interfaces;
 
 
 
-namespace Windowing;
+namespace Game;
 
 class Game
 {

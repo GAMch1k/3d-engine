@@ -1,4 +1,4 @@
-namespace Windowing;
+namespace Game;
 
 using Interfaces;
 using System.Numerics;
