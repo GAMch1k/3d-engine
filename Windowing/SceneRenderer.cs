@@ -5,7 +5,7 @@ using System.Numerics;
 using Silk.NET.OpenGL;
 using Utils;
 
-public class Scene
+public class SceneRenderer
 {
     private Dictionary<string, IRenderable> _objects = new Dictionary<string, IRenderable>();
     private Dictionary<IRenderable, Type> _objectTypes = new Dictionary<IRenderable, Type>();
@@ -13,7 +13,7 @@ public class Scene
     private Dictionary<IRenderable, uint> _objectVAOs = new Dictionary<IRenderable, uint>();
     private VAOGenerator vaoGen;
 
-    public Scene(GL gl)
+    public SceneRenderer(GL gl)
     {
         vaoGen = new VAOGenerator(gl);
     }

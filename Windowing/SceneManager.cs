@@ -10,12 +10,12 @@ namespace Windowing;
 public class SceneManager
 {
     private List<GameObject> gameObjects = new List<GameObject>();
-    private Scene scene;
+    private SceneRenderer scene;
     public Camera camera;
 
-    public Scene Load(GL gl)
+    public SceneRenderer Load(GL gl)
     {
-        scene = new Scene(gl);
+        scene = new SceneRenderer(gl);
 
 
         LoadTestScene();
@@ -26,7 +26,7 @@ public class SceneManager
     private void LoadTestScene()
     {
         scene.RegisterObjectType<Cube>((uint)ObjectIndexes.Cube);
-        
+
         camera = new Camera(
             "Main Camera",
             new Vector3(0, 0, 5),

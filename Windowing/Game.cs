@@ -28,7 +28,7 @@ class Game
     private List<Key> keysPressed = new List<Key> { };
     IInputContext _windowInput;
 
-    private Scene scene;
+    private SceneRenderer scene;
 
     public Game(int width, int height)
     {
