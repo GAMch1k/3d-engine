@@ -9,103 +9,36 @@ namespace Game;
 
 public class SceneManager
 {
-    private List<GameObject> gameObjects = new List<GameObject>();
-    private SceneRenderer scene;
-    public Camera camera;
-
-    public SceneRenderer Load(GL gl)
+    public Scene CurrentScene;
+    private GL gl;
+    public SceneManager(GL gl)
     {
-        scene = new SceneRenderer(gl);
-
-
-        LoadTestScene();
-
-        return scene;
+        this.gl = gl;
     }
 
-    private void LoadTestScene()
+    public SceneRenderer Load(ScenesList scene)
     {
-        scene.RegisterObjectType<Cube>((uint)ObjectIndexes.Cube);
+        CurrentScene = new Scene(gl);
 
-        camera = new Camera(
-            "Main Camera",
-            new Vector3(0, 0, 5),
-            Vector3.Zero,
-            Vector3.One
-        );
-
-        Random random = new Random();
-        for (int i = 0; i < 400; i++)
+        switch (scene)
         {
-            LevitatingCube cube = new LevitatingCube(
-                $"random-{i}",
-                new Vector3(
-                    (float)(random.NextDouble() * (15 - -15) + -15),
-                    (float)(random.NextDouble() * (15 - -15) + -15),
-                    (float)(random.NextDouble() * (15 - -15) + -15)
-                ),
-                new Vector3(
-                    (float)(random.NextDouble() * (15 - -15) + -15),
-                    (float)(random.NextDouble() * (15 - -15) + -15),
-                    (float)(random.NextDouble() * (15 - -15) + -15)
-                ),
-                new Vector3(
-                    (float)(random.NextDouble() * (1.5 - 0.5) + 0.5),
-                    (float)(random.NextDouble() * (1.5 - 0.5) + 0.5),
-                    (float)(random.NextDouble() * (1.5 - 0.5) + 0.5)
-                ),
-                Color.LightGray
-            );
+            case ScenesList.FloatingCubes:
+                CurrentScene.LoadFloatingCubesScene();
+                break;
+            case ScenesList.ProceduralGeneration:
+                CurrentScene.LoadProceduralGenerationScene();
+                break;
+            default:
+                throw new Exception("Wrong scene id provided. Please use SceneList enum");
 
-            cube._amplitude = (float)(random.NextDouble() * (0.8 - 0.1) + 0.1);
-            cube._frequency = (float)(random.NextDouble() * (0.4 - 0.1) + 0.1);
-
-            cube.OnUpdate += deltatime =>
-            {
-                cube.Position += new Vector3(0, (float)(random.NextDouble() * (0.6 - -0.6) + -0.6), 0) * new Vector3(deltatime);
-                // cube.Position += new Vector3(0, -9.8f, 0) * new Vector3(deltatime);
-                cube._timeaccumulator += deltatime;
-                float offset = (float)Math.Sin(
-                    cube._timeaccumulator * cube._frequency * 2 * Math.PI) * cube._amplitude;
-                cube.Position = new Vector3(
-                    cube.Position.X, cube._originalPosition + offset,
-                    cube.Position.Z);
-
-            };
-            scene.AddObject(cube);
-            gameObjects.Add(cube);
         }
+        return CurrentScene.GetSceneRenderer();
 
-        Cube cube1 = new Cube(
-            "cube blue",
-            new Vector3(0, 0, 0),
-            Vector3.Zero,
-            new Vector3(0.5f, 0.5f, 0.5f),
-            Color.Blue);
-
-        cube1.OnUpdate += deltatime =>
-        {
-            cube1.Rotation += new Vector3(-0.5f, 1, -1) * new Vector3((float)deltatime);
-        };
-
-        Cube cube2 = new Cube(
-            "cube red",
-            new Vector3(0, -1, 0),
-            Vector3.Zero,
-            Vector3.One,
-            Color.Red);
-        
-        cube2.OnUpdate += deltatime =>
-        {
-            cube2.Rotation += new Vector3(0, -1, 0) * new Vector3((float)deltatime);
-        };
-
-        scene.AddObject(cube1);
-        scene.AddObject(cube2);
     }
 
-    public void Clear()
+    public enum ScenesList : int
     {
-        gameObjects = new List<GameObject>();
+        FloatingCubes,
+        ProceduralGeneration,
     }
 }

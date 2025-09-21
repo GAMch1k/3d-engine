@@ -99,9 +99,10 @@ class Game
         gl.CullFace(GLEnum.Back);
         gl.FrontFace(GLEnum.Ccw);
 
-        SceneManager scenemg = new SceneManager();
-        scene = scenemg.Load(gl);
-        camera = scenemg.camera;
+        SceneManager scenemg = new SceneManager(gl);
+        // scene = scenemg.Load(SceneManager.ScenesList.FloatingCubes);
+        scene = scenemg.Load(SceneManager.ScenesList.ProceduralGeneration);
+        camera = scenemg.CurrentScene.GetCamera();
 
         shaderProgram = CreateShaderProgram();
 
