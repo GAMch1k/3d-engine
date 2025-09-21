@@ -73,3 +73,21 @@ public class Cube : RenderObject
     }
 
 }
+
+public class LevitatingCube : Cube
+{
+    public float _originalPosition { get; set; }
+    public float _amplitude { get; set; } = 0.3f;
+    public float _frequency { get; set; } = 0.2f;
+    public float _timeaccumulator { get; set; } = 0f;
+    public LevitatingCube(
+        string name,
+        Vector3 position,
+        Vector3 rotation,
+        Vector3 scale,
+        Color color
+    ) : base(name, position, rotation, scale, color)
+    {
+        _originalPosition = position.Y;
+    }
+}

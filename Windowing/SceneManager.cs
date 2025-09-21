@@ -36,7 +36,7 @@ public class SceneManager
         Random random = new Random();
         for (int i = 0; i < 400; i++)
         {
-            Cube cube = new Cube(
+            LevitatingCube cube = new LevitatingCube(
                 $"random-{i}",
                 new Vector3(
                     (float)(random.NextDouble() * (15 - -15) + -15),
@@ -55,10 +55,20 @@ public class SceneManager
                 ),
                 Color.LightGray
             );
+
+            cube._amplitude = (float)(random.NextDouble() * (0.8 - 0.1) + 0.1);
+            cube._frequency = (float)(random.NextDouble() * (0.4 - 0.1) + 0.1);
+
             cube.OnUpdate += deltatime =>
             {
                 cube.Position += new Vector3(0, (float)(random.NextDouble() * (0.6 - -0.6) + -0.6), 0) * new Vector3(deltatime);
                 // cube.Position += new Vector3(0, -9.8f, 0) * new Vector3(deltatime);
+                cube._timeaccumulator += deltatime;
+                float offset = (float)Math.Sin(
+                    cube._timeaccumulator * cube._frequency * 2 * Math.PI) * cube._amplitude;
+                cube.Position = new Vector3(
+                    cube.Position.X, cube._originalPosition + offset,
+                    cube.Position.Z);
 
             };
             scene.AddObject(cube);
