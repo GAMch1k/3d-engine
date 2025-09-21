@@ -177,6 +177,14 @@ class Game
         gl.UniformMatrix4(viewLoc, 1, false, (float*)&view);
         gl.UniformMatrix4(projLoc, 1, false, (float*)&proj);
 
+        // Light uniforms
+        Vector3 lightDir = new Vector3(0.0f, -1.0f, -1.0f);
+        lightDir = Vector3.Normalize(lightDir);
+        int lightDirLoc = gl.GetUniformLocation(shaderProgram, "uLightDir");
+        int lightColorLoc = gl.GetUniformLocation(shaderProgram, "uLightColor");
+        gl.Uniform3(lightDirLoc, lightDir.X, lightDir.Y, lightDir.Z);
+        gl.Uniform3(lightColorLoc, 1.0f, 1.0f, 1.0f);
+
         scene.Render(gl, shaderProgram, view, proj);
     }
 
@@ -186,8 +194,11 @@ class Game
             #version 330 core                                                                         
             layout(location = 0) in vec3 aPos;                                                        
             layout(location = 1) in vec3 aColor;                                                      
+            layout(location = 2) in vec3 aNormal;
                                                                                                     
             out vec3 vColor;                                                                          
+            out vec3 vNormal;
+            out vec3 vFragPos;
                                                                                                     
             uniform mat4 uModel;                                                                      
             uniform mat4 uView;                                                                       
@@ -195,7 +206,9 @@ class Game
                                                                                                     
             void main()                                                                               
             {                                                                                         
-                vColor = aColor;                                                                      
+                vColor = aColor;
+                vFragPos = vec3(uModel * vec4(aPos, 1.0));
+                vNormal = mat3(transpose(inverse(uModel))) * aNormal;
                 mat4 mvp = uProjection * uView * uModel;                                              
                 gl_Position = mvp * vec4(aPos, 1.0);                                                  
             }   
@@ -204,10 +217,23 @@ class Game
         string fragmentCode = @"
             #version 330 core
             in vec3 vColor;
+            in vec3 vNormal;
+            in vec3 vFragPos;
+
             out vec4 FragColor;
+
+            uniform vec3 uLightDir;
+            uniform vec3 uLightColor;
+
             void main()
             {
-                FragColor = vec4(vColor, 1.0);
+                vec3 norm = normalize(vNormal);
+                vec3 lightDirNorm = normalize(-uLightDir);
+                float diff = max(dot(norm, lightDirNorm), 0.0);
+                vec3 diffuse = diff * uLightColor;
+                vec3 ambient = 0.2 * uLightColor;
+                vec3 result = (ambient + diffuse) * vColor;
+                FragColor = vec4(result, 1.0);
             }
         ";
 

@@ -36,12 +36,16 @@ public class VAOGenerator
         }
         
         // Position attribute (location = 0)
-        gl.VertexAttribPointer(0, 3, GLEnum.Float, false, 6 * sizeof(float), (void*)0);
+        gl.VertexAttribPointer(0, 3, GLEnum.Float, false, 9 * sizeof(float), (void*)0);
         gl.EnableVertexAttribArray(0);
         
         // Color attribute (location = 1)
-        gl.VertexAttribPointer(1, 3, GLEnum.Float, false, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+        gl.VertexAttribPointer(1, 3, GLEnum.Float, false, 9 * sizeof(float), (void*)(3 * sizeof(float)));
         gl.EnableVertexAttribArray(1);
+        
+        // Normal attribute (location = 2)
+        gl.VertexAttribPointer(2, 3, GLEnum.Float, false, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+        gl.EnableVertexAttribArray(2);
         
         gl.BindVertexArray(0);
 

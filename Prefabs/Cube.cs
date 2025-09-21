@@ -17,16 +17,36 @@ public class Cube : RenderObject
         Name = name;
         indexCount = (uint)ObjectIndexes.Cube;
         base.SetVertices(new float[] {
-            // Front face
-            -0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
-            +0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
-            +0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
-            -0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
-            // Back face                  
-            -0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
-            +0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
-            +0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
-            -0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
+            // Front face (normal: 0, 0, 1)
+            -0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f,  0f, +1f,
+            +0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f,  0f, +1f,
+            +0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f,  0f, +1f,
+            -0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f,  0f, +1f,
+            // Back face (normal: 0, 0, -1)
+            -0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f,  0f, -1f,
+            +0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f,  0f, -1f,
+            +0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f,  0f, -1f,
+            -0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f,  0f, -1f,
+            // Right face (normal: 1, 0, 0)
+            +0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f, +1f,  0f,  0f,
+            +0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f, +1f,  0f,  0f,
+            +0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f, +1f,  0f,  0f,
+            +0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f, +1f,  0f,  0f,
+            // Left face (normal: -1, 0, 0)
+            -0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f, -1f,  0f,  0f,
+            -0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f, -1f,  0f,  0f,
+            -0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f, -1f,  0f,  0f,
+            -0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f, -1f,  0f,  0f,
+            // Top face (normal: 0, 1, 0)
+            -0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f, +1f,  0f,
+            +0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f, +1f,  0f,
+            +0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f, +1f,  0f,
+            -0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f, +1f,  0f,
+            // Bottom face (normal: 0, -1, 0)
+            -0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f, -1f,  0f,
+            +0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f, -1f,  0f,
+            +0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f, -1f,  0f,
+            -0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,  0f, -1f,  0f,
         });
     }
 
