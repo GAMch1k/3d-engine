@@ -7,7 +7,7 @@ using Utils;
 
 public class Scene
 {
-    private List<IRenderable> _objects = new List<IRenderable>();
+    private Dictionary<string, IRenderable> _objects = new Dictionary<string, IRenderable>();
     private Dictionary<IRenderable, Type> _objectTypes = new Dictionary<IRenderable, Type>();
     private Dictionary<Type, uint> _objectIndexCounts = new Dictionary<Type, uint>();
     private Dictionary<IRenderable, uint> _objectVAOs = new Dictionary<IRenderable, uint>();
@@ -25,7 +25,7 @@ public class Scene
 
     public void AddObject<T>(T obj) where T : IRenderable
     {
-        _objects.Add(obj);
+        _objects[obj.Name] = obj;
         _objectTypes[obj] = typeof(T);
 
         var vaoData = vaoGen.CreateVAO(obj.GetVertices(), obj.GetIndices());
@@ -34,23 +34,18 @@ public class Scene
 
     public uint GetIndexCountForObject(IRenderable obj)
     {
-        if (_objectTypes.TryGetValue(obj, out Type type) && 
+        if (_objectTypes.TryGetValue(obj, out Type type) &&
             _objectIndexCounts.TryGetValue(type, out uint indexCount))
         {
             return indexCount;
         }
-        
+
         throw new InvalidOperationException($"No index count registered for object type: {obj.GetType()}");
     }
 
-    public List<IRenderable> GetObjects()
+    public Dictionary<string, IRenderable> GetObjects()
     {
         return _objects;
-    }
-
-    public void Update(double deltatime)
-    {
-
     }
 
     public unsafe void Render(GL gl, uint shaderProgram, Matrix4x4 view, Matrix4x4 projection)
@@ -66,11 +61,11 @@ public class Scene
 
         foreach (var obj in _objects)
         {
-            var model = obj.GetModelMatrix();
+            var model = obj.Value.GetModelMatrix();
             gl.UniformMatrix4(modelLoc, 1, false, (float*)&model);
-            
-            gl.BindVertexArray(_objectVAOs[obj]);
-            gl.DrawElements(GLEnum.Triangles, obj.indexCount, GLEnum.UnsignedInt, null);
+
+            gl.BindVertexArray(_objectVAOs[obj.Value]);
+            gl.DrawElements(GLEnum.Triangles, obj.Value.indexCount, GLEnum.UnsignedInt, null);
         }
     }
 }

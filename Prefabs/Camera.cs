@@ -11,8 +11,9 @@ public class Camera : GameObject
     public float Yaw { get; set; } = -90f;   // Left/right rotation
     public float Pitch { get; set; } = 0f;    // Up/down rotation
     public float MovementSpeed { get; set; } = 2f;
-    public float MouseSensitivity { get; set; } = 0.1f;
+    public float MouseSensitivity { get; set; } = 0.05f;
     public Camera(
+        string Name,
         Vector3 position,
         Vector3 rotation,
         Vector3 scale)
@@ -61,10 +62,10 @@ public class Camera : GameObject
                 Position += Right * velocity;
                 break;
             case CameraMovement.Up:
-                Position += Up * velocity;
+                Position += new Vector3(0, 1, 0) * velocity;
                 break;
             case CameraMovement.Down:
-                Position -= Up * velocity;
+                Position -= new Vector3(0, 1, 0) * velocity;
                 break;
         }
     }

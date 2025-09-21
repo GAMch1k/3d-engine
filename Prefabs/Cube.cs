@@ -7,12 +7,14 @@ using Utils;
 public class Cube : RenderObject
 {
     public Cube(
+        string name,
         Vector3 position,
         Vector3 rotation,
         Vector3 scale,
         Color color)
         : base(position, rotation, scale)
     {
+        Name = name;
         indexCount = (uint)ObjectIndexes.Cube;
         base.SetVertices(new float[] {
             // Front face
