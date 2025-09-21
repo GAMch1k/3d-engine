@@ -2,6 +2,7 @@ namespace Prefabs;
 
 using System.Numerics;
 using System.Drawing;
+using Utils;
 
 public class Cube : Object
 {
@@ -12,24 +13,24 @@ public class Cube : Object
         Color color)
         : base(position, rotation, scale)
     {
+        indexCount = (uint)ObjectIndexes.Cube;
         base.SetVertices(new float[] {
             // Front face
-            position.X - 0.5f, position.Y - 0.5f, position.Z + 0.5f, color.R, color.G, color.B,
-            position.X + 0.5f, position.Y - 0.5f, position.Z + 0.5f, color.R, color.G, color.B,
-            position.X + 0.5f, position.Y + 0.5f, position.Z + 0.5f, color.R, color.G, color.B,
-            position.X - 0.5f, position.Y + 0.5f, position.Z + 0.5f, color.R, color.G, color.B,
-
-            // Back face
-            position.X - 0.5f, position.Y - 0.5f, position.Z - 0.5f, color.R, color.G, color.B,
-            position.X + 0.5f, position.Y - 0.5f, position.Z - 0.5f, color.R, color.G, color.B,
-            position.X + 0.5f, position.Y + 0.5f, position.Z - 0.5f, color.R, color.G, color.B,
-            position.X - 0.5f, position.Y + 0.5f, position.Z - 0.5f, color.R, color.G, color.B,
+            -0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
+            +0.5f, -0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
+            +0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
+            -0.5f, +0.5f, +0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
+            // Back face                  
+            -0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
+            +0.5f, -0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
+            +0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
+            -0.5f, +0.5f, -0.5f, color.R / 255f, color.G / 255f, color.B / 255f,
         });
     }
 
-    public override uint[] GetIndices(int multiply_index)
+    public override uint[] GetIndices()
     {
-        uint[] indices = new uint[] {
+        return new uint[] {
             0, 1, 2, 2, 3, 0, // front
             1, 5, 6, 6, 2, 1, // right
             5, 4, 7, 7, 6, 5, // back
@@ -37,13 +38,6 @@ public class Cube : Object
             3, 2, 6, 6, 7, 3, // top
             4, 5, 1, 1, 0, 4,  // bottom
         };
-
-        for (int i = 0; i < indices.Length; i++)
-        {
-            indices[i] += (uint)multiply_index;
-        }
-
-        return indices;
     }
 
 }

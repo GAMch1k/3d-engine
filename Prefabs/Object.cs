@@ -10,6 +10,8 @@ public class Object : IRenderable
     public Vector3 rotation { get; set; } = Vector3.Zero;
     public Vector3 scale { get; set; } = Vector3.One;
 
+    public uint indexCount { get; set; }
+
     private float[] vertices;
 
 
@@ -34,7 +36,7 @@ public class Object : IRenderable
         return vertices;
     }
 
-    public virtual uint[] GetIndices(int multiply_index)
+    public virtual uint[] GetIndices()
     {
         return new uint[] { };
     }

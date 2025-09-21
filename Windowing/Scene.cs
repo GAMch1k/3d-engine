@@ -10,6 +10,13 @@ public class Scene
     private List<IRenderable> _objects = new List<IRenderable>();
     private Dictionary<IRenderable, Type> _objectTypes = new Dictionary<IRenderable, Type>();
     private Dictionary<Type, uint> _objectIndexCounts = new Dictionary<Type, uint>();
+    private Dictionary<IRenderable, uint> _objectVAOs = new Dictionary<IRenderable, uint>();
+    private VAOGenerator vaoGen;
+
+    public Scene(GL gl)
+    {
+        vaoGen = new VAOGenerator(gl);
+    }
 
     public void RegisterObjectType<T>(uint indexCount) where T : IRenderable
     {
@@ -20,6 +27,9 @@ public class Scene
     {
         _objects.Add(obj);
         _objectTypes[obj] = typeof(T);
+
+        var vaoData = vaoGen.CreateVAO(obj.GetVertices(), obj.GetIndices());
+        _objectVAOs[obj] = vaoData.vao;
     }
 
     public uint GetIndexCountForObject(IRenderable obj)
@@ -33,6 +43,11 @@ public class Scene
         throw new InvalidOperationException($"No index count registered for object type: {obj.GetType()}");
     }
 
+    public List<IRenderable> GetObjects()
+    {
+        return _objects;
+    }
+
     public void Update(double deltatime)
     {
 
@@ -40,8 +55,6 @@ public class Scene
 
     public unsafe void Render(GL gl, uint shaderProgram, Matrix4x4 view, Matrix4x4 projection)
     {
-        VAOGenerator vaoGen = new VAOGenerator(gl);
-
         gl.UseProgram(shaderProgram);
 
         int viewLoc = gl.GetUniformLocation(shaderProgram, "uView");
@@ -56,9 +69,8 @@ public class Scene
             var model = obj.GetModelMatrix();
             gl.UniformMatrix4(modelLoc, 1, false, (float*)&model);
             
-            // Here you would bind different VAOs for different object types
-            gl.BindVertexArray(vaoGen.CreateVAO(obj.GetVertices(), obj.GetIndices(0)).vao);
-            gl.DrawElements(GLEnum.Triangles, GetIndexCountForObject(obj), GLEnum.UnsignedInt, null);
+            gl.BindVertexArray(_objectVAOs[obj]);
+            gl.DrawElements(GLEnum.Triangles, obj.indexCount, GLEnum.UnsignedInt, null);
         }
     }
 }

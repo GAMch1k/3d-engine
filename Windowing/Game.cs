@@ -7,6 +7,8 @@ using Silk.NET.Input;
 using System.Drawing;
 
 using Prefabs;
+using Utils;
+using Interfaces;
 
 
 
@@ -17,18 +19,14 @@ class Game
     private static IWindow window;
     private static GL gl;
 
-    private static uint vao, vbo, ebo, shaderProgram;
-
-    // Cube vertices (posX, posY, posZ, r, g, b)
-    private float[] vertices = {};
-
-    // Indices for cube (two triangles per face)
-    private uint[] indices = {};
+    private static uint shaderProgram;
 
     private Vector3D<float> camera_position;
     private float cameraSpeed = 1f;
 
-    private List<Key> keysPressed = new List<Key> {};
+    private List<Key> keysPressed = new List<Key> { };
+
+    private Scene scene;
 
     public Game(int width, int height)
     {
@@ -65,34 +63,24 @@ class Game
         keysPressed.Remove(key);
     }
 
-    private void UpdateRenderData()
+    private void AddObjectToScene()
     {
-        List<float> vert = new List<float> { };
-        List<uint> ind = new List<uint> { };
-        int last_vert_ammount = 0;
+        scene.RegisterObjectType<Cube>((uint)ObjectIndexes.Cube);
 
         Cube cube = new Cube(
             new Vector3(0, 0, 0),
             Vector3.Zero,
             Vector3.One,
-            Color.Black);
-
-        vert.AddRange(cube.GetVertices());
-        ind.AddRange(cube.GetIndices(last_vert_ammount));
-        last_vert_ammount += cube.GetVertices().Count() / 6;
+            Color.Blue);
 
         Cube cube2 = new Cube(
             new Vector3(0, -1, 0),
             Vector3.Zero,
             Vector3.One,
-            Color.White);
+            Color.Red);
 
-        vert.AddRange(cube2.GetVertices());
-        ind.AddRange(cube2.GetIndices(last_vert_ammount));
-        last_vert_ammount += cube.GetVertices().Count() / 6;
-
-        vertices = vert.ToArray<float>();
-        indices = ind.ToArray<uint>();
+        scene.AddObject(cube);
+        scene.AddObject(cube2);
     }
 
     private unsafe void OnLoad()
@@ -105,33 +93,12 @@ class Game
         for (int i = 0; i < input.Keyboards.Count; i++)
             input.Keyboards[i].KeyUp += KeyUp;
 
-        // Enable depth testing
         gl.Enable(GLEnum.DepthTest);
 
-        UpdateRenderData();
+        scene = new Scene(gl);
 
-        // Create VAO, VBO, EBO
-        vao = gl.GenVertexArray();
-        vbo = gl.GenBuffer();
-        ebo = gl.GenBuffer();
+        AddObjectToScene();
 
-        gl.BindVertexArray(vao);
-
-        gl.BindBuffer(GLEnum.ArrayBuffer, vbo);
-        gl.BufferData(GLEnum.ArrayBuffer, (ReadOnlySpan<float>)vertices, GLEnum.StaticDraw);
-
-        gl.BindBuffer(GLEnum.ElementArrayBuffer, ebo);
-        gl.BufferData(GLEnum.ElementArrayBuffer, (ReadOnlySpan<uint>)indices, GLEnum.StaticDraw);
-
-        // Position attribute (3 floats)
-        gl.VertexAttribPointer(0, 3, GLEnum.Float, false, 6 * sizeof(float), (void*)0);
-        gl.EnableVertexAttribArray(0);
-
-        // Color attribute (3 floats)
-        gl.VertexAttribPointer(1, 3, GLEnum.Float, false, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-        gl.EnableVertexAttribArray(1);
-
-        // Compile shaders
         shaderProgram = CreateShaderProgram();
 
     }
@@ -156,10 +123,10 @@ class Game
                     case Key.D:
                         camera_position.X -= cameraSpeed * (float)delta;
                         break;
-                    case Key.Q:
+                    case Key.ShiftLeft:
                         camera_position.Y += cameraSpeed * (float)delta;
                         break;
-                    case Key.E:
+                    case Key.Space:
                         camera_position.Y -= cameraSpeed * (float)delta;
                         break;
                 }
@@ -174,8 +141,6 @@ class Game
 
         gl.UseProgram(shaderProgram);
 
-        // Build MVP matrix
-        var model = Matrix4x4.CreateRotationY(0f);
         var view = Matrix4x4.CreateTranslation(camera_position.X, camera_position.Y, camera_position.Z);
         var proj = Matrix4x4.CreatePerspectiveFieldOfView(
             (float)Math.PI / 4f,
@@ -183,31 +148,33 @@ class Game
             0.1f,
             100f);
 
+        int viewLoc = gl.GetUniformLocation(shaderProgram, "uView");
+        int projLoc = gl.GetUniformLocation(shaderProgram, "uProjection");
+        gl.UniformMatrix4(viewLoc, 1, false, (float*)&view);
+        gl.UniformMatrix4(projLoc, 1, false, (float*)&proj);
 
-        var mvp = model * view * proj;
-
-        // Upload matrix to shader
-        int loc = gl.GetUniformLocation(shaderProgram, "uMVP");
-        gl.UniformMatrix4(loc, 1, false, (float*)&mvp);
-
-        // Draw cube
-        gl.BindVertexArray(vao);
-        gl.DrawElements(GLEnum.Triangles, (uint)indices.Length, GLEnum.UnsignedInt, null);
+        scene.Render(gl, shaderProgram, view, proj);
     }
 
     private static uint CreateShaderProgram()
     {
         string vertexCode = @"
-            #version 330 core
-            layout(location = 0) in vec3 aPos;
-            layout(location = 1) in vec3 aColor;
-            out vec3 vColor;
-            uniform mat4 uMVP;
-            void main()
-            {
-                vColor = aColor;
-                gl_Position = uMVP * vec4(aPos, 1.0);
-            }
+            #version 330 core                                                                         
+            layout(location = 0) in vec3 aPos;                                                        
+            layout(location = 1) in vec3 aColor;                                                      
+                                                                                                    
+            out vec3 vColor;                                                                          
+                                                                                                    
+            uniform mat4 uModel;                                                                      
+            uniform mat4 uView;                                                                       
+            uniform mat4 uProjection;                                                                 
+                                                                                                    
+            void main()                                                                               
+            {                                                                                         
+                vColor = aColor;                                                                      
+                mat4 mvp = uProjection * uView * uModel;                                              
+                gl_Position = mvp * vec4(aPos, 1.0);                                                  
+            }   
         ";
 
         string fragmentCode = @"
@@ -223,10 +190,13 @@ class Game
         uint vertex = gl.CreateShader(GLEnum.VertexShader);
         gl.ShaderSource(vertex, vertexCode);
         gl.CompileShader(vertex);
+        CheckShaderCompileError(vertex, "vertex");
 
         uint fragment = gl.CreateShader(GLEnum.FragmentShader);
         gl.ShaderSource(fragment, fragmentCode);
         gl.CompileShader(fragment);
+        CheckShaderCompileError(fragment, "fragment");
+
 
         uint program = gl.CreateProgram();
         gl.AttachShader(program, vertex);
@@ -237,5 +207,16 @@ class Game
         gl.DeleteShader(fragment);
 
         return program;
+    }
+
+    private unsafe static void CheckShaderCompileError(uint shader, string type)
+    {
+        int success;
+        gl.GetShader(shader, GLEnum.CompileStatus, &success);
+        if (success == 0)
+        {
+            string infoLog = gl.GetShaderInfoLog(shader);
+            Console.WriteLine($"SHADER COMPILE ERROR ({type}): {infoLog}");
+        }
     }
 }
